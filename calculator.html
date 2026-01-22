@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URS分数样本量计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .page-input-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 10px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-calculate {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            border-left: 4px solid #4caf50;
+            display: none;
+        }
+        
+        .result-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+        
+        .result-item {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .result-value {
+            font-weight: bold;
+            color: #1b5e20;
+            font-size: 18px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .error {
+            color: #dc3545;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        
+        .info-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <noscript>
+        <div style="padding: 20px; background: #ffebee; color: #c62828; text-align: center;">
+            <h2>需要启用JavaScript</h2>
+            <p>此页面需要JavaScript才能正常工作，请在浏览器设置中启用JavaScript。</p>
+        </div>
+    </noscript>
+    <div class="container">
+        <h1>URS分数样本量计算器（混合逻辑）</h1>
+        
+        <!-- 总参数输入区域 -->
+        <div class="section">
+            <div class="section-title">1. 总参数设置</div>
+            <div class="form-group">
+                <label for="p_total">总URS目标比例 (p_total)</label>
+                <input type="number" id="p_total" step="0.01" min="0.01" max="0.99" value="0.7" placeholder="如：0.7 表示70%">
+                <div class="info-text">范围：0-1之间（如0.7代表70%）</div>
+            </div>
+            <div class="form-group">
+                <label for="alpha">显著性水平 (alpha)</label>
+                <input type="number" id="alpha" step="0.01" min="0.01" max="0.5" value="0.1" placeholder="如：0.1">
+                <div class="info-text">默认值：0.1</div>
+            </div>
+            <div class="form-group">
+                <label for="power">统计功效 (power)</label>
+                <input type="number" id="power" step="0.01" min="0.5" max="0.99" value="0.8" placeholder="如：0.8">
+                <div class="info-text">默认值：0.8</div>
+            </div>
+            <div class="form-group">
+                <label for="delta">总波动幅度 (delta)</label>
+                <input type="number" id="delta" step="0.001" min="0.001" max="0.1" value="0.01" placeholder="如：0.01 表示1%">
+                <div class="info-text">如：0.01 表示1%的波动</div>
+            </div>
+        </div>
+        
+        <!-- 页面参数输入区域 -->
+        <div class="section">
+            <div class="section-title">2. 页面参数设置</div>
+            <div id="page-inputs-container">
+                <div class="page-input-group">
+                    <input type="text" class="page-name" placeholder="页面名称（如：L）" value="L">
+                    <input type="number" class="page-p" step="0.01" min="0.01" max="0.99" placeholder="页面p" value="0.65">
+                    <input type="number" class="page-weight" step="0.001" min="0.001" max="1" placeholder="页面权重" value="0.443">
+                    <div></div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="addPageInput()" style="margin-top: 10px;">+ 添加页面</button>
+        </div>
+        
+        <!-- 计算按钮 -->
+        <button class="btn btn-primary btn-calculate" onclick="calculate()">计算样本量</button>
+        
+        <!-- 结果显示区域 -->
+        <div class="result-section" id="result-section">
+            <div class="result-title">URS分数样本量计算结果</div>
+            <div class="result-item">
+                <span>总样本量：</span>
+                <span class="result-value" id="total-n"></span>
+            </div>
+            <div style="margin-top: 20px;">
+                <strong>各页面底线样本量：</strong>
+                <div id="page-results"></div>
+            </div>
+            <table id="result-table" style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>页面名称</th>
+                        <th>样本量</th>
+                        <th>页面URS比例(p)</th>
+                        <th>页面权重</th>
+                        <th>页面级波动(delta)</th>
+                    </tr>
+                </thead>
+                <tbody id="result-table-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 调试信息（可在生产环境删除） -->
+    <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+        页面已加载 | JavaScript版本: 1.0
+    </div>
+
+    <script>
+        // 页面加载检查
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            // 确保所有元素都存在
+            if (!document.getElementById('p_total')) {
+                console.error('关键元素未找到');
+                alert('页面元素加载失败，请刷新页面重试');
+            } else {
+                console.log('所有关键元素已加载');
+            }
+        });
+        
+        // 错误捕获
+        window.addEventListener('error', function(e) {
+            console.error('页面错误:', e.message, e.filename, e.lineno);
+        });
+        
+        // 正态分布逆累积分布函数（norm.ppf）的近似实现
+        // 使用 Acklam's algorithm 的简化版本
+        function normPPF(p) {
+            if (p <= 0 || p >= 1) {
+                return NaN;
+            }
+            
+            // 常量
+            const a1 = -3.969683028665376e+01;
+            const a2 =  2.209460984245205e+02;
+            const a3 = -2.759285104469687e+02;
+            const a4 =  1.383577518672690e+02;
+            const a5 = -3.066479806614716e+01;
+            const a6 =  2.506628277459239e+00;
+            
+            const b1 = -5.447609879822406e+01;
+            const b2 =  1.615858368580409e+02;
+            const b3 = -1.556989798598866e+02;
+            const b4 =  6.680131188771972e+01;
+            const b5 = -1.328068155288572e+01;
+            
+            const c1 = -7.784894002430293e-03;
+            const c2 = -3.223964580411365e-01;
+            const c3 = -2.400758277161838e+00;
+            const c4 = -2.549732539343734e+00;
+            const c5 =  4.374664141464968e+00;
+            const c6 =  2.938163982698783e+00;
+            
+            const d1 =  7.784695709041462e-03;
+            const d2 =  3.224671290700398e-01;
+            const d3 =  2.445134137142996e+00;
+            const d4 =  3.754408661907416e+00;
+            
+            const p_low = 0.02425;
+            const p_high = 1 - p_low;
+            
+            let q, r, x;
+            
+            if (p < p_low) {
+                q = Math.sqrt(-2 * Math.log(p));
+                x = (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) / 
+                    ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+            } else if (p <= p_high) {
+                q = p - 0.5;
+                r = q * q;
+                x = (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q / 
+                    (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
+            } else {
+                q = Math.sqrt(-2 * Math.log(1 - p));
+                x = -(((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) / 
+                    ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+            }
+            
+            return x;
+        }
+        
+        // 添加页面输入行
+        function addPageInput() {
+            const container = document.getElementById('page-inputs-container');
+            const div = document.createElement('div');
+            div.className = 'page-input-group';
+            div.innerHTML = `
+                <input type="text" class="page-name" placeholder="页面名称（如：D）">
+                <input type="number" class="page-p" step="0.01" min="0.01" max="0.99" placeholder="页面p">
+                <input type="number" class="page-weight" step="0.001" min="0.001" max="1" placeholder="页面权重">
+                <button class="btn btn-danger" onclick="removePageInput(this)">删除</button>
+            `;
+            container.appendChild(div);
+        }
+        
+        // 删除页面输入行
+        function removePageInput(btn) {
+            btn.parentElement.remove();
+        }
+        
+        // 计算URS分数样本量
+        function calculateUrsScoreSampleSize(pTotal, pageParams, alpha, power, delta) {
+            // 校验输入参数
+            if (!pageParams || Object.keys(pageParams).length === 0) {
+                throw new Error("请传入页面参数字典");
+            }
+            if (pTotal <= 0 || pTotal >= 1) {
+                throw new Error("总p值必须在0-1之间（如0.7代表70%）");
+            }
+            
+            for (let page in pageParams) {
+                const params = pageParams[page];
+                if (params.weight <= 0) {
+                    throw new Error(`${page}页面权重必须为正数（避免波动计算除以0）`);
+                }
+                if (params.p <= 0 || params.p >= 1) {
+                    throw new Error(`${page}页面p值必须在0-1之间`);
+                }
+            }
+            
+            // 计算Z分位数（双侧检验）
+            const zAlpha = normPPF(1 - alpha / 2);
+            const zBeta = normPPF(power);
+            
+            // 总样本量计算
+            const totalN = Math.ceil(((zAlpha + zBeta) ** 2 * pTotal * (1 - pTotal)) / (delta ** 2));
+            
+            // 分页面样本量计算（逻辑二：独立计算，页面级波动=总波动/权重）
+            const pageN = {};
+            for (let page in pageParams) {
+                const pageP = pageParams[page].p;
+                const pageWeight = pageParams[page].weight;
+                // 页面级波动：总波动 / 页面权重
+                const deltaPage = delta / pageWeight;
+                // 单个页面的样本量计算
+                const pageSample = ((zAlpha + zBeta) ** 2 * pageP * (1 - pageP)) / (deltaPage ** 2);
+                pageN[page] = Math.ceil(pageSample);
+            }
+            
+            return { totalN, pageN };
+        }
+        
+        // 主计算函数
+        function calculate() {
+            try {
+                // 获取总参数
+                const pTotal = parseFloat(document.getElementById('p_total').value);
+                const alpha = parseFloat(document.getElementById('alpha').value);
+                const power = parseFloat(document.getElementById('power').value);
+                const delta = parseFloat(document.getElementById('delta').value);
+                
+                // 获取页面参数
+                const pageInputs = document.querySelectorAll('.page-input-group');
+                const pageParams = {};
+                
+                pageInputs.forEach((group, index) => {
+                    const nameInput = group.querySelector('.page-name');
+                    const pInput = group.querySelector('.page-p');
+                    const weightInput = group.querySelector('.page-weight');
+                    
+                    const name = nameInput.value.trim();
+                    const p = parseFloat(pInput.value);
+                    const weight = parseFloat(weightInput.value);
+                    
+                    if (name && !isNaN(p) && !isNaN(weight)) {
+                        pageParams[name] = { p: p, weight: weight };
+                    }
+                });
+                
+                // 执行计算
+                const result = calculateUrsScoreSampleSize(pTotal, pageParams, alpha, power, delta);
+                
+                // 显示结果
+                document.getElementById('total-n').textContent = result.totalN;
+                
+                // 显示各页面结果
+                let pageResultsHtml = '<ul style="margin-top: 10px;">';
+                for (let page in result.pageN) {
+                    pageResultsHtml += `<li style="margin: 5px 0;">${page}页面：${result.pageN[page]}</li>`;
+                }
+                pageResultsHtml += '</ul>';
+                document.getElementById('page-results').innerHTML = pageResultsHtml;
+                
+                // 显示结果表格
+                let tableBody = '';
+                for (let page in result.pageN) {
+                    const params = pageParams[page];
+                    const deltaPage = delta / params.weight;
+                    tableBody += `
+                        <tr>
+                            <td>${page}</td>
+                            <td>${result.pageN[page]}</td>
+                            <td>${params.p.toFixed(3)}</td>
+                            <td>${params.weight.toFixed(3)}</td>
+                            <td>${deltaPage.toFixed(4)}</td>
+                        </tr>
+                    `;
+                }
+                document.getElementById('result-table-body').innerHTML = tableBody;
+                
+                // 显示结果区域
+                document.getElementById('result-section').style.display = 'block';
+                
+            } catch (error) {
+                alert('计算错误：' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
